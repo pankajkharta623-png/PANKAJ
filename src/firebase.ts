@@ -9,10 +9,13 @@ export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 
 async function testConnection() {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. ");
+    const docRef = doc(db, 'test', 'connection');
+    await getDocFromServer(docRef);
+    console.log("Firestore connection successful.");
+  } catch (error: any) {
+    console.error("Firestore connection failed:", error.code, error.message);
+    if(error.code === 'unavailable') {
+      console.warn("Firestore backend is currently unreachable. This might be a temporary network issue or the database is still provisioning.");
     }
   }
 }

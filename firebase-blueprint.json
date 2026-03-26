@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System users including Admin, Teacher, and Student.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "name": { "type": "string", "description": "Full name of the user" },
+        "email": { "type": "string", "format": "email", "description": "User email address" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student"], "description": "User role" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Academic courses offered in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique course ID" },
+        "code": { "type": "string", "description": "Course code (e.g., CS101)" },
+        "name": { "type": "string", "description": "Course name" },
+        "credits": { "type": "number", "description": "Total credits for the course" },
+        "semester": { "type": "string", "description": "Semester (e.g., Fall 2026)" },
+        "teacherId": { "type": "string", "description": "UID of the assigned teacher" }
+      },
+      "required": ["id", "code", "name", "credits", "semester", "teacherId"]
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "Student enrollment in courses.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "UID of the student" },
+        "courseId": { "type": "string", "description": "ID of the course" },
+        "enrollmentDate": { "type": "string", "format": "date-time", "description": "Date of enrollment" }
+      },
+      "required": ["studentId", "courseId", "enrollmentDate"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Daily attendance records.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "UID of the student" },
+        "courseId": { "type": "string", "description": "ID of the course" },
+        "date": { "type": "string", "format": "date", "description": "Date of attendance" },
+        "status": { "type": "string", "enum": ["present", "absent"], "description": "Attendance status" },
+        "teacherId": { "type": "string", "description": "UID of the teacher who marked attendance" }
+      },
+      "required": ["studentId", "courseId", "date", "status", "teacherId"]
+    },
+    "Test": {
+      "title": "Test",
+      "description": "Exams or tests for a course.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique test ID" },
+        "courseId": { "type": "string", "description": "ID of the course" },
+        "name": { "type": "string", "description": "Name of the test" },
+        "maxMarks": { "type": "number", "description": "Maximum marks for the test" },
+        "dueDate": { "type": "string", "format": "date", "description": "Due date for the test" },
+        "teacherId": { "type": "string", "description": "UID of the teacher who created the test" }
+      },
+      "required": ["id", "courseId", "name", "maxMarks", "dueDate", "teacherId"]
+    },
+    "TestScore": {
+      "title": "TestScore",
+      "description": "Student scores for specific tests.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "UID of the student" },
+        "testId": { "type": "string", "description": "ID of the test" },
+        "marks": { "type": "number", "description": "Marks obtained by the student" },
+        "grade": { "type": "string", "description": "Grade awarded" }
+      },
+      "required": ["studentId", "testId", "marks", "grade"]
+    },
+    "Material": {
+      "title": "Material",
+      "description": "Course materials uploaded by teachers.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string", "description": "ID of the course" },
+        "title": { "type": "string", "description": "Title of the material" },
+        "description": { "type": "string", "description": "Description of the material" },
+        "fileUrl": { "type": "string", "format": "uri", "description": "URL to the file" },
+        "type": { "type": "string", "enum": ["pdf", "video"], "description": "Type of material" },
+        "uploadedBy": { "type": "string", "description": "UID of the teacher who uploaded the material" },
+        "uploadedAt": { "type": "string", "format": "date-time", "description": "Upload timestamp" }
+      },
+      "required": ["courseId", "title", "description", "fileUrl", "type", "uploadedBy", "uploadedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/courses/{courseId}": { "schema": "Course", "description": "Course details" },
+    "/enrollments/{enrollmentId}": { "schema": "Enrollment", "description": "Course enrollments" },
+    "/attendance/{attendanceId}": { "schema": "Attendance", "description": "Attendance records" },
+    "/tests/{testId}": { "schema": "Test", "description": "Test definitions" },
+    "/test_scores/{scoreId}": { "schema": "TestScore", "description": "Student test scores" },
+    "/materials/{materialId}": { "schema": "Material", "description": "Course materials" }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "EduFlow",
+  "description": "Next-Gen Academic Management System with AI-powered performance insights for administrators, teachers, and students.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, name, email, role (admin, teacher, student), createdAt
+    //
+    // Collection: courses
+    // Fields: id, code, name, credits, semester, teacherId
+    //
+    // Collection: enrollments
+    // Fields: studentId, courseId, enrollmentDate
+    //
+    // Collection: attendance
+    // Fields: studentId, courseId, date, status, teacherId
+    //
+    // Collection: tests
+    // Fields: id, courseId, name, maxMarks, dueDate, teacherId
+    //
+    // Collection: test_scores
+    // Fields: studentId, testId, marks, grade
+    //
+    // Collection: materials
+    // Fields: courseId, title, description, fileUrl, type, uploadedBy, uploadedAt
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "pankajkharta623@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isTeacher() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+
+    function isStudent() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() > 0 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") &&
+             data.role in ['admin', 'teacher', 'student'];
+    }
+
+    function isValidCourse(data) {
+      return data.id is string && data.code is string && data.name is string &&
+             data.credits is number && data.credits > 0 &&
+             data.semester is string && data.teacherId is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role));
+    }
+
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /enrollments/{enrollmentId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || (isStudent() && request.auth.uid == resource.data.studentId));
+      allow create: if isTeacher() || isAdmin();
+      allow update, delete: if isTeacher() || isAdmin();
+    }
+
+    match /tests/{testId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isTeacher() || isAdmin();
+    }
+
+    match /test_scores/{scoreId} {
+      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || (isStudent() && request.auth.uid == resource.data.studentId));
+      allow create, update, delete: if isTeacher() || isAdmin();
+    }
+
+    match /materials/{materialId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isTeacher() || isAdmin();
+    }
+  }
+}
